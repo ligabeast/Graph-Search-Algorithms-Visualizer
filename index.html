@@ -1,0 +1,67 @@
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script src="
+    https://cdn.jsdelivr.net/npm/cytoscape@3.24.0/dist/cytoscape.min.js
+    "></script>
+
+    <title>SearchVisualizer</title>
+  </head>
+  <body>
+    <div class="flex flex-col w-full bg-cyan-500 justify-center px-20 py-8">
+      <p class="text-4xl font-semibold text-white">
+        Search Algorithm Visualizer
+      </p>
+    </div>
+    <div
+      class="flex flex-row justify-center items-center gap-4 w-full bg-stone-300 justify-center px-20 py-2"
+    >
+      <div class="flex flex-row gap-2">
+        <label for="algorithm">Select Algorithm: </label>
+        <select id="algorithm" class="outline-none rounded-md text-sm px-2">
+          <option>Breath First Search</option>
+          <option>Depth First Search</option>
+          <option>Djkstra</option>
+          <option>A Star</option>
+        </select>
+      </div>
+      <div class="flex flex-row gap-2">
+        <label for="speed">Speed: </label>
+        <select id="speed" class="outline-none rounded-md text-sm px-2">
+          <option>Fast</option>
+          <option>Average</option>
+          <option>Slow</option>
+        </select>
+      </div>
+      <div class="flex flex-row gap-2 items-center">
+        <label for="size">Node/Edge Quantity: </label>
+        <select id="size" class="outline-none rounded-md text-sm px-2">
+          <option>5</option>
+          <option>10</option>
+          <option>15</option>
+        </select>
+        <input
+          type="button"
+          id="generateGraph"
+          value="Generate Graph"
+          class="bg-white rounded-lg px-4 py-1 hover:bg-cyan-400 hover:text-white hover:cursor-pointer transition hover:shadow-lg"
+        />
+      </div>
+      <input
+        type="button"
+        id="visualize"
+        value="Visualize!"
+        class="rounded-lg px-4 py-1 bg-[#2AFF22] text-white hover:bg-[#22DA1C] hover:shadow-lg hover:cursor-pointer transition"
+      />
+    </div>
+    <div
+      id="graphVisualization"
+      class="mx-auto max-w-5xl h-3/4 m-4 outline"
+    ></div>
+    <script src="script.js"></script>
+  </body>
+</html>
