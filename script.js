@@ -3,13 +3,13 @@
 const defaultNodeColor = "#92D2EE";
 const greenNodeColor = "#57D04A";
 const redNodeColor = "#FC4C4C";
-const darkBluteNodeColor = "#453CCE";
+const darkBlueColor = "#3333FF";
 const defaultEdgeColor = "#A8A8A8";
 
 const delay = {
-  fast: 1000,
-  Average: 2000,
-  Slow: 3000,
+  Fast: 500,
+  Average: 1000,
+  Slow: 2000,
 };
 
 class Node {
@@ -101,8 +101,8 @@ class Graph {
             label: "data(weight)",
             "text-margin-y": -10,
             "line-color": defaultEdgeColor,
-            "text-rotation": "autorotate",
             "target-arrow-color": defaultEdgeColor,
+            "text-rotation": "autorotate",
             "target-arrow-shape": "triangle",
             "curve-style": "bezier",
           },
@@ -216,7 +216,29 @@ class Graph {
     this.cyWindow.$id(id).style({
       "border-width": 2,
       "border-color": "black",
-      "background-color": darkBluteNodeColor,
+      "background-color": darkBlueColor,
+    });
+  }
+  markEdgeVisited(source, target) {
+    this.cyWindow
+      .$id(
+        this.edges.find(
+          (element) => element.source == source && element.target == target
+        ).id
+      )
+      .style({
+        "line-color": darkBlueColor,
+        "target-arrow-color": darkBlueColor,
+      });
+  }
+  resetGraph() {
+    this.cyWindow.$("node").style({
+      "border-width": 0,
+      "background-color": defaultNodeColor,
+    });
+    this.cyWindow.$("edge").style({
+      "line-color": defaultEdgeColor,
+      "target-arrow-color": defaultEdgeColor,
     });
   }
   getNodeById(id) {
@@ -256,6 +278,12 @@ class SearchAlgorithms {
     this._graph.toggleNodeEnd(end, true);
     this._end = this.graph.getNodeById(end);
   }
+  set queue(queue) {
+    this._queue = queue;
+  }
+  get queue() {
+    return this._queue;
+  }
   get graph() {
     return this._graph;
   }
@@ -288,29 +316,34 @@ class SearchAlgorithms {
   getPath() {
     let node = this.end;
     const path = [];
-    while (node != this.start) {
+    while (node != this.start && node) {
       path.unshift(node);
       node = this.parent.get(node);
     }
-    path.unshift(this.start);
+    if (node) {
+      path.unshift(this.start);
+    }
     return path;
   }
-  depthFirstSearch() {
-    const Solution = this.depthFirstSearchRecursive(this.start);
+  async depthFirstSearch() {
+    const Solution = await this.depthFirstSearchRecursive(this.start);
     console.log("Solution " + (Solution ? "found" : "not found"));
     console.log(this.getPath());
     console.log("With a cost of: ", this.getPathCost());
   }
-  depthFirstSearchRecursive(node) {
+  async depthFirstSearchRecursive(node) {
     console.log(node);
     this.marked.set(node, true);
     this.graph.markNodeVisited(node.id);
+    await new Promise((r) => setTimeout(r, delay[this.speed]));
     if (node == this.end) {
       return true;
     }
     for (let adjacent of this.graph.getAdjacent(node)) {
       const target = adjacent.target;
       if (!this.marked.get(target)) {
+        await new Promise((r) => setTimeout(r, delay[this.speed] / 2));
+        this.graph.markEdgeVisited(node, target);
         this.parent.set(target, node);
         const found = this.depthFirstSearchRecursive(target);
         if (found) {
@@ -322,13 +355,13 @@ class SearchAlgorithms {
     return false;
   }
 
-  breathFirstSearch() {
-    const queue = new FlatQueue();
-    queue.push(this.start, 0);
+  async breathFirstSearch() {
+    this.queue.push(this.start, 0);
     let Solution = false;
 
-    while (queue.length > 0) {
-      const node = queue.pop();
+    while (this.queue.length > 0) {
+      await new Promise((r) => setTimeout(r, delay[this.speed]));
+      const node = this.queue.pop();
       this.marked.set(node, true);
       this.graph.markNodeVisited(node.id);
       console.log(node);
@@ -341,24 +374,27 @@ class SearchAlgorithms {
       for (let adjacent of this.graph.getAdjacent(node)) {
         if (!this.marked.get(adjacent.target)) {
           const target = adjacent.target;
-          queue.push(target, 0);
+          await new Promise((r) => setTimeout(r, delay[this.speed] / 2));
+          this.graph.markEdgeVisited(node, target);
+          this.queue.push(target, 0);
           this.parent.set(target, node);
         }
       }
     }
     console.log("Solution " + (Solution ? "found" : "not found"));
-    console.log(this.parent);
     console.log(this.getPath());
     console.log("With a cost of: ", this.getPathCost());
   }
   aStar() {}
   djkstra() {}
 
-  visualize() {
+  async visualize() {
     delete this.parent;
     delete this.marked;
+    delete this.queue;
     this.parent = new Map();
     this.marked = new Map();
+    this._queue = new FlatQueue();
     for (const node of this.graph.nodes) {
       this.marked.set(node, false);
       this.parent.set(node, null);
@@ -366,18 +402,22 @@ class SearchAlgorithms {
 
     switch (this.algorthm) {
       case "Breath First Search":
-        this.breathFirstSearch();
+        await this.breathFirstSearch();
         break;
       case "Depth First Search":
-        this.depthFirstSearch();
+        await this.depthFirstSearch();
         break;
       case "Djkstra":
-        this.djkstra();
+        await this.djkstra();
         break;
       case "A Star":
-        this.aStar();
+        await this.aStar();
         break;
     }
+    await new Promise((r) => setTimeout(r, delay[this.speed]));
+    this.graph.resetGraph();
+    this.start = null;
+    this.end = null;
   }
 }
 

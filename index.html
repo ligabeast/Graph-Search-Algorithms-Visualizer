@@ -23,7 +23,7 @@
       </p>
     </div>
     <div
-      class="flex flex-row justify-center items-center gap-4 w-full bg-stone-300 justify-center py-2"
+      class="flex flex-row flex-wrap justify-center items-center gap-4 w-full bg-stone-300 justify-center py-2"
     >
       <div class="flex flex-row gap-2">
         <label for="algorithm">Select Algorithm: </label>
@@ -64,9 +64,54 @@
       />
     </div>
     <div
-      id="graphVisualization"
-      class="mx-auto max-w-4xl h-3/4 m-4 outline"
-    ></div>
+      class="flex flex-col h-full w-full p-10 md:justify-center md:flex-row gap-4"
+    >
+      <div
+        id="graphVisualization"
+        class="outline h-1/2 md:w-1/2 max-w-full rounded-xl"
+      ></div>
+      <div class="md:w-1/4 flex flex-col gap-2">
+        <div class="flex flex-col gap-2 items-center">
+          <p class="w-full text-bold text-2xl border-b-2 border-">
+            Create Node
+          </p>
+          <div class="relative flex flex-row gap-4">
+            <input
+              type="text"
+              placeholder="ID"
+              class="px-4 py-1 outline-none border border-black rounded-xl w-20"
+            />
+            <input
+              type="button"
+              value="Create"
+              class="px-4 py-1 bg-stone-400 rounded-xl text-white shadow-lg hover:cursor-pointer hover:bg-stone-500 hover:shadow-2xl"
+            />
+          </div>
+        </div>
+        <div class="flex flex-col gap-2 items-center">
+          <p class="w-full text-bold text-2xl border-b-2 border-">
+            Create Edge
+          </p>
+          <div class="relative flex flex-row flex-wrap gap-4">
+            <input
+              type="text"
+              placeholder="Source ID"
+              class="px-4 py-1 outline-none border border-black rounded-xl w-20"
+            />
+            <input
+              type="text"
+              placeholder="Target ID"
+              class="px-4 py-1 outline-none border border-black rounded-xl w-20"
+            />
+            <input
+              type="button"
+              value="Create"
+              class="px-4 py-1 bg-stone-400 rounded-xl text-white shadow-lg hover:cursor-pointer hover:bg-stone-500 hover:shadow-2xl"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
     <script src="script.js"></script>
   </body>
 </html>
