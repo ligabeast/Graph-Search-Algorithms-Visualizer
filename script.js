@@ -3,7 +3,14 @@
 const defaultNodeColor = "#92D2EE";
 const greenNodeColor = "#57D04A";
 const redNodeColor = "#FC4C4C";
+const darkBluteNodeColor = "#453CCE";
 const defaultEdgeColor = "#A8A8A8";
+
+const delay = {
+  fast: 1000,
+  Average: 2000,
+  Slow: 3000,
+};
 
 class Node {
   constructor(id, x, y) {
@@ -205,6 +212,13 @@ class Graph {
       "background-color": condition ? redNodeColor : defaultNodeColor,
     });
   }
+  markNodeVisited(id) {
+    this.cyWindow.$id(id).style({
+      "border-width": 2,
+      "border-color": "black",
+      "background-color": darkBluteNodeColor,
+    });
+  }
   getNodeById(id) {
     return this.nodes.find((element) => element.id == id);
   }
@@ -290,6 +304,7 @@ class SearchAlgorithms {
   depthFirstSearchRecursive(node) {
     console.log(node);
     this.marked.set(node, true);
+    this.graph.markNodeVisited(node.id);
     if (node == this.end) {
       return true;
     }
@@ -307,7 +322,35 @@ class SearchAlgorithms {
     return false;
   }
 
-  breathFirstSearch() {}
+  breathFirstSearch() {
+    const queue = new FlatQueue();
+    queue.push(this.start, 0);
+    let Solution = false;
+
+    while (queue.length > 0) {
+      const node = queue.pop();
+      this.marked.set(node, true);
+      this.graph.markNodeVisited(node.id);
+      console.log(node);
+
+      if (node == this.end) {
+        Solution = true;
+        break;
+      }
+
+      for (let adjacent of this.graph.getAdjacent(node)) {
+        if (!this.marked.get(adjacent.target)) {
+          const target = adjacent.target;
+          queue.push(target, 0);
+          this.parent.set(target, node);
+        }
+      }
+    }
+    console.log("Solution " + (Solution ? "found" : "not found"));
+    console.log(this.parent);
+    console.log(this.getPath());
+    console.log("With a cost of: ", this.getPathCost());
+  }
   aStar() {}
   djkstra() {}
 
@@ -350,6 +393,8 @@ $(() => {
   $(generateButton).click((e) => {
     graphObj.size = $("#size").val();
     graphObj.generateRandomGraph();
+    searchAlgorithms.start = null;
+    searchAlgorithms.end = null;
   });
   graphObj.cyWindow.on("tap", "node", function (evt) {
     const id = evt.target.id();
@@ -369,6 +414,7 @@ $(() => {
     }
   });
   $("#visualize").click((e) => {
+    searchAlgorithms.speed = $("#speed").val();
     searchAlgorithms.algorthm = $("#algorithm").val();
     searchAlgorithms.speed = $("#speed").val();
     searchAlgorithms.visualize();
