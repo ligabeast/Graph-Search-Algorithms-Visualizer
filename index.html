@@ -8,7 +8,11 @@
     <script src="
     https://cdn.jsdelivr.net/npm/cytoscape@3.24.0/dist/cytoscape.min.js
     "></script>
-
+    <script src="https://cdn.jsdelivr.net/npm/cytoscape-context-menus@4.1.0/cytoscape-context-menus.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/cytoscape-context-menus@4.1.0/cytoscape-context-menus.min.css"
+    />
     <title>SearchVisualizer</title>
   </head>
   <body>
@@ -18,7 +22,7 @@
       </p>
     </div>
     <div
-      class="flex flex-row justify-center items-center gap-4 w-full bg-stone-300 justify-center px-20 py-2"
+      class="flex flex-row justify-center items-center gap-4 w-full bg-stone-300 justify-center py-2"
     >
       <div class="flex flex-row gap-2">
         <label for="algorithm">Select Algorithm: </label>
@@ -33,7 +37,7 @@
         <label for="speed">Speed: </label>
         <select id="speed" class="outline-none rounded-md text-sm px-2">
           <option>Fast</option>
-          <option>Average</option>
+          <option selected>Average</option>
           <option>Slow</option>
         </select>
       </div>
@@ -60,7 +64,7 @@
     </div>
     <div
       id="graphVisualization"
-      class="mx-auto max-w-5xl h-3/4 m-4 outline"
+      class="mx-auto max-w-4xl h-3/4 m-4 outline"
     ></div>
     <script src="script.js"></script>
   </body>

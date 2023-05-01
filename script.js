@@ -1,11 +1,15 @@
 "use strict";
 
+const defaultNodeColor = "#92D2EE";
+const greenNodeColor = "#57D04A";
+const redNodeColor = "#FC4C4C";
+const defaultEdgeColor = "#A8A8A8";
+
 class Node {
-  constructor(id, x, y, cyObject) {
+  constructor(id, x, y) {
     this._id = id;
     this._x = x;
     this._y = y;
-    this._cyObject = cyObject;
   }
   get id() {
     return this._id;
@@ -16,9 +20,6 @@ class Node {
   get y() {
     return this._y;
   }
-  get cyObject() {
-    return this._cyObject;
-  }
   set id(id) {
     this._id = id;
   }
@@ -27,9 +28,6 @@ class Node {
   }
   set y(y) {
     this._y = y;
-  }
-  set cyObject(cyObject) {
-    this._cyObject = cyObject;
   }
 }
 
@@ -83,7 +81,7 @@ class Graph {
         {
           selector: "node",
           style: {
-            "background-color": "#92D2EE",
+            "background-color": defaultNodeColor,
             "text-valign": "center",
             "text-halign": "center",
             label: "data(id)",
@@ -95,9 +93,9 @@ class Graph {
             width: 3,
             label: "data(weight)",
             "text-margin-y": -10,
-            "line-color": "#A8A8A8",
+            "line-color": defaultEdgeColor,
             "text-rotation": "autorotate",
-            "target-arrow-color": "#A8A8A8",
+            "target-arrow-color": defaultEdgeColor,
             "target-arrow-shape": "triangle",
             "curve-style": "bezier",
           },
@@ -106,8 +104,6 @@ class Graph {
     });
     this._container = container;
     this._size = size;
-    this.nodes = [];
-    this.edges = [];
   }
   set cyWindow(cyWindow) {
     this._cyWindow = cyWindow;
@@ -117,6 +113,18 @@ class Graph {
   }
   set size(size) {
     this._size = size;
+  }
+  set edges(edges) {
+    this._edges = edges;
+  }
+  set nodes(nodes) {
+    this._nodes = nodes;
+  }
+  get edges() {
+    return this._edges;
+  }
+  get nodes() {
+    return this._nodes;
   }
   get cyWindow() {
     return this._cyWindow;
@@ -129,14 +137,13 @@ class Graph {
   }
   generateRandomComponents(type) {
     const components = [];
-    this[type] = [];
-    for (let i = 1; i <= this._size; i++) {
+    for (let i = 1; i <= this.size; i++) {
       const cyObject = {};
       cyObject["group"] = type;
       if (type == "edges") {
-        let randomSource = Math.trunc(Math.random() * this._size) + 1;
+        let randomSource = Math.trunc(Math.random() * this.size) + 1;
         while (randomSource == i) {
-          randomSource = Math.trunc(Math.random() * this._size) + 1;
+          randomSource = Math.trunc(Math.random() * this.size) + 1;
         }
         cyObject["data"] = {
           id: "e" + String(i),
@@ -144,50 +151,226 @@ class Graph {
           target: "n" + String(i),
           weight: Math.trunc(Math.random() * 50) + 1,
         };
-        this[type].push(
-          new Edge(
-            cyObject["data"]["source"],
-            cyObject["data"]["target"],
-            cyObject["data"]["weight"],
-            cyObject["data"]["id"],
-            cyObject
-          )
+        const edge = new Edge(
+          this.getNodeById(cyObject["data"]["source"]),
+          this.getNodeById(cyObject["data"]["target"]),
+          cyObject["data"]["weight"],
+          cyObject["data"]["id"]
         );
+        this["_" + type].push(edge);
+        this.adjacentMatrix
+          .get(this.getNodeById(cyObject["data"]["source"]))
+          .push(edge);
       } else if (type == "nodes") {
         cyObject["data"] = {
           id: "n" + String(i),
         };
         cyObject["position"] = {
-          x: 200 * ((i - 1) % 4) + Math.trunc((Math.random() + 2) * 100),
+          x: 150 * ((i - 1) % 4) + Math.trunc((Math.random() + 2) * 100),
           y:
             200 * Math.trunc((i - 1) / 4) +
             Math.trunc((Math.random() + 1) * 100),
         };
-        this[type].push(
-          new Node(
-            cyObject["data"]["id"],
-            cyObject["position"]["x"],
-            cyObject["position"]["y"],
-            cyObject
-          )
+        const node = new Node(
+          cyObject["data"]["id"],
+          cyObject["position"]["x"],
+          cyObject["position"]["y"]
         );
+        this["_" + type].push(node);
+        this.adjacentMatrix.set(node, []);
       }
       components.push(cyObject);
     }
-    this._cyWindow.add(components);
+    this.cyWindow.add(components);
   }
   generateRandomGraph() {
-    this._cyWindow.remove("*");
-    this.generateRandomComponents("nodes", this._size);
-    this.generateRandomComponents("edges", this._size);
+    delete this.adjacentMatrix;
+    delete this.nodes;
+    delete this.edges;
+    this.adjacentMatrix = new Map();
+    this.nodes = [];
+    this.edges = [];
+
+    this.cyWindow.remove("*");
+    this.generateRandomComponents("nodes", this.size);
+    this.generateRandomComponents("edges", this.size);
+  }
+  toggleNodeStart(id, condition) {
+    this.cyWindow.$id(id).style({
+      "background-color": condition ? greenNodeColor : defaultNodeColor,
+    });
+  }
+  toggleNodeEnd(id, condition) {
+    this.cyWindow.$id(id).style({
+      "background-color": condition ? redNodeColor : defaultNodeColor,
+    });
+  }
+  getNodeById(id) {
+    return this.nodes.find((element) => element.id == id);
+  }
+  getAdjacent(node) {
+    return this.adjacentMatrix.get(node);
   }
 }
+class SearchAlgorithms {
+  constructor(graph) {
+    this._graph = graph;
+  }
+  set speed(speed) {
+    this._speed = speed;
+  }
+  set graph(graph) {
+    this._graph = graph;
+  }
+  set parent(parent) {
+    this._parent = parent;
+  }
+  set algorthm(algorthm) {
+    this._algorthm = algorthm;
+  }
+  set start(start) {
+    if (this._start) {
+      this._graph.toggleNodeStart(this._start.id, false);
+    }
+    this._graph.toggleNodeStart(start, true);
+    this._start = this.graph.getNodeById(start);
+  }
+  set end(end) {
+    if (this._end) {
+      this._graph.toggleNodeEnd(this._end.id, false);
+    }
+    this._graph.toggleNodeEnd(end, true);
+    this._end = this.graph.getNodeById(end);
+  }
+  get graph() {
+    return this._graph;
+  }
+  get speed() {
+    return this._speed;
+  }
+  get parent() {
+    return this._parent;
+  }
+  get algorthm() {
+    return this._algorthm;
+  }
+  get start() {
+    return this._start;
+  }
+  get end() {
+    return this._end;
+  }
+  getPathCost() {
+    let result = 0;
+    const path = this.getPath();
+    for (let i = 1; i < path.length; i++) {
+      const edge = this.graph.adjacentMatrix
+        .get(path[i - 1])
+        .find((element) => element.target == path[i]);
+      result += edge.weight;
+    }
+    return result;
+  }
+  getPath() {
+    let node = this.end;
+    const path = [];
+    while (node != this.start) {
+      path.unshift(node);
+      node = this.parent.get(node);
+    }
+    path.unshift(this.start);
+    return path;
+  }
+  depthFirstSearch() {
+    const Solution = this.depthFirstSearchRecursive(this.start);
+    console.log("Solution " + (Solution ? "found" : "not found"));
+    console.log(this.getPath());
+    console.log("With a cost of: ", this.getPathCost());
+  }
+  depthFirstSearchRecursive(node) {
+    console.log(node);
+    this.marked.set(node, true);
+    if (node == this.end) {
+      return true;
+    }
+    for (let adjacent of this.graph.getAdjacent(node)) {
+      const target = adjacent.target;
+      if (!this.marked.get(target)) {
+        this.parent.set(target, node);
+        const found = this.depthFirstSearchRecursive(target);
+        if (found) {
+          return true;
+        }
+        this.parent.set(target, null);
+      }
+    }
+    return false;
+  }
+
+  breathFirstSearch() {}
+  aStar() {}
+  djkstra() {}
+
+  visualize() {
+    delete this.parent;
+    delete this.marked;
+    this.parent = new Map();
+    this.marked = new Map();
+    for (const node of this.graph.nodes) {
+      this.marked.set(node, false);
+      this.parent.set(node, null);
+    }
+
+    switch (this.algorthm) {
+      case "Breath First Search":
+        this.breathFirstSearch();
+        break;
+      case "Depth First Search":
+        this.depthFirstSearch();
+        break;
+      case "Djkstra":
+        this.djkstra();
+        break;
+      case "A Star":
+        this.aStar();
+        break;
+    }
+  }
+}
+
 $(() => {
   const container = "#graphVisualization";
   const generateButton = "#generateGraph";
-  const obj = new Graph(container, 5);
-  obj.generateRandomGraph();
+
+  const graphObj = new Graph(container, $("#size").val());
+  graphObj.generateRandomGraph();
+
+  const searchAlgorithms = new SearchAlgorithms(graphObj);
+
   $(generateButton).click((e) => {
-    obj.generateRandomGraph();
+    graphObj.size = $("#size").val();
+    graphObj.generateRandomGraph();
+  });
+  graphObj.cyWindow.on("tap", "node", function (evt) {
+    const id = evt.target.id();
+    const start = searchAlgorithms.start;
+    const end = searchAlgorithms.end;
+
+    if ((!end && start && id == start.id) || (!start && end && id == end.id)) {
+      return;
+    } else if (!start) {
+      searchAlgorithms.start = id;
+    } else if (!end) {
+      searchAlgorithms.end = id;
+    } else if (id == start.id) {
+      searchAlgorithms.start = null;
+    } else if (id == end.id) {
+      searchAlgorithms.end = null;
+    }
+  });
+  $("#visualize").click((e) => {
+    searchAlgorithms.algorthm = $("#algorithm").val();
+    searchAlgorithms.speed = $("#speed").val();
+    searchAlgorithms.visualize();
   });
 });
