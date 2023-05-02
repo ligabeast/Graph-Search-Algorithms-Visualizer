@@ -53,7 +53,7 @@
       <div class="flex flex-col w-full md:justify-center md:flex-row gap-4">
         <div
           id="graphVisualization"
-          class="outline h-96 md:w-1/2 max-w-full rounded-xl"
+          class="outline h-[500px] md:w-1/2 max-w-full rounded-xl"
         ></div>
         <div class="flex flex-col gap-4">
           <input
@@ -73,13 +73,13 @@
             <div class="relative flex flex-row flex-wrap gap-4">
               <input
                 type="text"
-                id="source"
+                id="createSource"
                 placeholder="Source ID"
                 class="px-4 py-1 outline-none border border-black rounded-xl w-28"
               />
               <input
                 type="text"
-                id="target"
+                id="createTarget"
                 placeholder="Target ID"
                 class="px-4 py-1 outline-none border border-black rounded-xl w-28"
               />
@@ -94,6 +94,46 @@
                 id="createEdge"
                 value="Create"
                 class="bg-stone-400 text-white rounded-lg px-4 py-1 hover:bg-cyan-400 hover:cursor-pointer transition hover:shadow-lg"
+              />
+            </div>
+          </div>
+          <div class="flex flex-col gap-2 items-center">
+            <p class="w-full text-bold text-2xl border-b-2">Delete Node</p>
+            <div class="relative flex flex-row flex-wrap gap-4">
+              <input
+                type="text"
+                id="deleteId"
+                placeholder="ID"
+                class="px-4 py-1 outline-none border border-black rounded-xl w-28"
+              />
+              <input
+                type="button"
+                id="deleteNode"
+                value="Delete"
+                class="bg-red-500 text-white rounded-lg px-4 py-1 hover:bg-cyan-400 hover:cursor-pointer transition hover:shadow-lg"
+              />
+            </div>
+          </div>
+          <div class="flex flex-col gap-2 items-center">
+            <p class="w-full text-bold text-2xl border-b-2">Delete Edge</p>
+            <div class="relative flex flex-row flex-wrap gap-4">
+              <input
+                type="text"
+                id="deleteSource"
+                placeholder="Source ID"
+                class="px-4 py-1 outline-none border border-black rounded-xl w-28"
+              />
+              <input
+                type="text"
+                id="deleteTarget"
+                placeholder="Target ID"
+                class="px-4 py-1 outline-none border border-black rounded-xl w-28"
+              />
+              <input
+                type="button"
+                id="deleteEdge"
+                value="Delete"
+                class="bg-red-500 text-white rounded-lg px-4 py-1 hover:bg-cyan-400 hover:cursor-pointer transition hover:shadow-lg"
               />
             </div>
           </div>

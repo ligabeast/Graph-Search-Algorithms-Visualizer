@@ -25,12 +25,11 @@ class Node {
 }
 
 class Edge {
-  constructor(source, target, weigth, id, cyObject) {
+  constructor(source, target, weigth, id) {
     this._source = source;
     this._target = target;
     this._weigth = weigth;
     this._id = id;
-    this._cyObject = cyObject;
   }
   get id() {
     return this._id;
@@ -55,12 +54,6 @@ class Edge {
   }
   set target(target) {
     this._target = target;
-  }
-  set cyObject(cyObject) {
-    this._cyObject = cyObject;
-  }
-  set weigth(weigth) {
-    this._weigth = weight;
   }
 }
 
@@ -196,11 +189,12 @@ class Graph {
       "background-color": darkBlueColor,
     });
   }
-  markEdgeVisited(source, target) {
+  markEdgeVisited(edge) {
     this.cyWindow
       .$id(
         this.edges.find(
-          (element) => element.source == source && element.target == target
+          (element) =>
+            element.source == edge.source && element.target == edge.target
         ).id
       )
       .style({
@@ -248,6 +242,33 @@ class Graph {
     this.adjacentMatrix.set(node, []);
     this.cyWindow.add(cyObject);
   }
+  deleteEdge(source, target) {
+    const sourceNode = this.getNodeById("n" + source);
+    const targetNode = this.getNodeById("n" + target);
+
+    const edge = this.edges.find(
+      (element) => element.source == sourceNode && element.target == targetNode
+    );
+    if (!edge) {
+      return;
+    }
+
+    this.cyWindow.$id(edge.id).remove();
+    this.edges.splice(this.edges.indexOf(edge), 1);
+  }
+  deleteNode(id) {
+    const node = this.getNodeById("n" + id);
+
+    if (!node) {
+      return;
+    }
+
+    this.cyWindow.$id(node.id).remove();
+    this.nodes.splice(this.nodes.indexOf(node), 1);
+    this.edges = this.edges.filter(
+      (item) => item.source != node && item.target != node
+    );
+  }
   createEdge(source, target, weight) {
     const sourceNode = this.getNodeById("n" + source);
     const targetNode = this.getNodeById("n" + target);
@@ -264,7 +285,7 @@ class Graph {
       id: "e" + String(currentQuantity + 1),
       source: "n" + source,
       target: "n" + target,
-      weight: weight,
+      weight: Number(weight),
     };
     const edge = new Edge(
       this.getNodeById(cyObject["data"]["source"]),
@@ -282,7 +303,12 @@ class Graph {
 class SearchAlgorithms {
   constructor(graph) {
     this._graph = graph;
+    this._running = false;
   }
+  set running(running) {
+    this._running = running;
+  }
+
   set speed(speed) {
     this._speed = speed;
   }
@@ -311,6 +337,9 @@ class SearchAlgorithms {
   }
   set queue(queue) {
     this._queue = queue;
+  }
+  get running() {
+    return this._running;
   }
   get queue() {
     return this._queue;
@@ -372,8 +401,7 @@ class SearchAlgorithms {
     return await this.depthFirstSearchRecursive(this.start);
   }
   async depthFirstSearchRecursive(node) {
-    // console.log(node);
-    this.marked.set(node, true);
+    this.marked.add(node, true);
     this.graph.markNodeVisited(node.id);
     await new Promise((r) => setTimeout(r, delay[this.speed]));
     if (node == this.end) {
@@ -381,9 +409,9 @@ class SearchAlgorithms {
     }
     for (let adjacent of this.graph.getAdjacent(node)) {
       const target = adjacent.target;
-      if (!this.marked.get(target)) {
+      if (!this.marked.has(target)) {
         await new Promise((r) => setTimeout(r, delay[this.speed] / 2));
-        this.graph.markEdgeVisited(node, target);
+        this.graph.markEdgeVisited(adjacent);
         this.parent.set(target, node);
         const found = this.depthFirstSearchRecursive(target);
         if (found) {
@@ -401,22 +429,18 @@ class SearchAlgorithms {
     while (this.queue.length > 0) {
       await new Promise((r) => setTimeout(r, delay[this.speed]));
       const node = this.queue.pop();
-      this.marked.set(node, true);
-      console.log(this.queue);
-      console.log(this.start);
-      console.log(node);
+      this.marked.add(node, true);
       this.graph.markNodeVisited(node.id);
-      // console.log(node);
 
       if (node == this.end) {
         return true;
       }
 
       for (let adjacent of this.graph.getAdjacent(node)) {
-        if (!this.marked.get(adjacent.target)) {
+        if (!this.marked.has(adjacent.target)) {
           const target = adjacent.target;
           await new Promise((r) => setTimeout(r, delay[this.speed] / 2));
-          this.graph.markEdgeVisited(node, target);
+          this.graph.markEdgeVisited(adjacent);
           this.queue.unshift(target);
           this.parent.set(target, node);
         }
@@ -424,18 +448,54 @@ class SearchAlgorithms {
     }
   }
   aStar() {}
-  djkstra() {}
+  async djkstra() {
+    const StartEdge = new Edge(null, this.start, 0, 0);
+    this.queue.push(StartEdge, StartEdge.weight);
+
+    while (this.queue.length > 0) {
+      await new Promise((r) => setTimeout(r, delay[this.speed]));
+      const costs = this.queue.peekValue();
+      const edge = this.queue.pop();
+      this.graph.markNodeVisited(edge.target.id);
+      this.parent.set(edge.target, edge.source);
+      this.marked.add(edge.target);
+
+      if (edge.target == this.end) {
+        return true;
+      }
+
+      for (let adjacent of this.graph.getAdjacent(edge.target)) {
+        if (
+          !this.marked.has(adjacent.target) &&
+          this.reachedCosts.get(adjacent.target) > adjacent.weight + costs
+        ) {
+          this.reachedCosts.set(adjacent.target, adjacent.weight + costs);
+          this.graph.markEdgeVisited(adjacent);
+          await new Promise((r) => setTimeout(r, delay[this.speed] / 2));
+          this.queue.push(adjacent, adjacent.weight + costs);
+          console.log(adjacent, adjacent.weight + costs);
+        }
+      }
+    }
+    return false;
+  }
 
   async visualize() {
+    if (!(this.start && this.end && this.graph.nodes.length > 1)) {
+      return;
+    }
+    this.running = true;
     delete this.parent;
     delete this.marked;
     delete this.queue;
+    delete this.reachedNode;
     this.parent = new Map();
-    this.marked = new Map();
+    this.marked = new Set();
+    this.reachedCosts = new Map();
     this.queue = this.algorthm == "Breath First Search" ? [] : new FlatQueue();
     for (const node of this.graph.nodes) {
-      this.marked.set(node, false);
       this.parent.set(node, null);
+      this.reachedCosts.set(node, 100000000);
     }
 
     let Solution = false;
@@ -461,13 +521,11 @@ class SearchAlgorithms {
     } else {
       $("#unsolvable").show();
     }
-    // console.log("Solution " + (Solution ? "found" : "not found"));
-    // console.log(this.getPath());
-    // console.log("With a cost of: ", this.getPathCost());
     await new Promise((r) => setTimeout(r, 3000));
     this.graph.resetMarkings();
     this.start = null;
     this.end = null;
+    this.running = false;
   }
 }
 
@@ -479,10 +537,12 @@ $(() => {
   const searchAlgorithms = new SearchAlgorithms(graphObj);
 
   $(generateButton).click((e) => {
-    graphObj.size = $("#size").val();
-    graphObj.generateRandomGraph();
-    searchAlgorithms.start = null;
-    searchAlgorithms.end = null;
+    if (!searchAlgorithms.running) {
+      graphObj.size = $("#size").val();
+      graphObj.generateRandomGraph();
+      searchAlgorithms.start = null;
+      searchAlgorithms.end = null;
+    }
   });
   graphObj.cyWindow.on("tap", "node", function (evt) {
     const id = evt.target.id();
@@ -514,12 +574,30 @@ $(() => {
     graphObj.createNode();
   });
   $("#createEdge").click((e) => {
-    graphObj.createEdge(
-      $("#source").val(),
-      $("#target").val(),
+    if (
+      $("#createSource").val() &&
+      $("#createTarget").val() &&
       $("#weight").val()
-    );
-    $("#source, #target, #weight").val("");
+    ) {
+      graphObj.createEdge(
+        $("#createSource").val(),
+        $("#createTarget").val(),
+        $("#weight").val()
+      );
+      $("#source, #target, #weight").val("");
+    }
+  });
+  $("#deleteEdge").click((e) => {
+    if ($("#deleteSource").val() && $("#deleteTarget").val()) {
+      graphObj.deleteEdge($("#createSource").val(), $("#createTarget").val());
+      $("#deleteSource, #deleteTarget").val("");
+    }
+  });
+  $("#deleteNode").click((e) => {
+    if ($("#deleteId").val()) {
+      graphObj.deleteNode($("#deleteId").val());
+      $("#deleteId").val("");
+    }
   });
   $(".question").click(function (e) {
     $(`#answer${e.target.id}`).slideToggle();
