@@ -13,28 +13,14 @@ const delay = {
 };
 
 class Node {
-  constructor(id, x, y) {
+  constructor(id) {
     this._id = id;
-    this._x = x;
-    this._y = y;
   }
   get id() {
     return this._id;
   }
-  get x() {
-    return this._x;
-  }
-  get y() {
-    return this._y;
-  }
   set id(id) {
     this._id = id;
-  }
-  set x(x) {
-    this._x = x;
-  }
-  set y(y) {
-    this._y = y;
   }
 }
 
@@ -79,7 +65,7 @@ class Edge {
 }
 
 class Graph {
-  constructor(container, size) {
+  constructor(container) {
     this._cyWindow = cytoscape({
       container: $(container),
       wheelSensitivity: 0.1,
@@ -109,8 +95,10 @@ class Graph {
         },
       ],
     });
+    this.nodes = [];
+    this.edges = [];
+    this.adjacentMatrix = new Map();
     this._container = container;
-    this._size = size;
   }
   set cyWindow(cyWindow) {
     this._cyWindow = cyWindow;
@@ -178,11 +166,7 @@ class Graph {
             200 * Math.trunc((i - 1) / 4) +
             Math.trunc((Math.random() + 1) * 100),
         };
-        const node = new Node(
-          cyObject["data"]["id"],
-          cyObject["position"]["x"],
-          cyObject["position"]["y"]
-        );
+        const node = new Node(cyObject["data"]["id"]);
         this["_" + type].push(node);
         this.adjacentMatrix.set(node, []);
       }
@@ -191,16 +175,9 @@ class Graph {
     this.cyWindow.add(components);
   }
   generateRandomGraph() {
-    delete this.adjacentMatrix;
-    delete this.nodes;
-    delete this.edges;
-    this.adjacentMatrix = new Map();
-    this.nodes = [];
-    this.edges = [];
-
-    this.cyWindow.remove("*");
-    this.generateRandomComponents("nodes", this.size);
-    this.generateRandomComponents("edges", this.size);
+    this.resetGraph();
+    this.generateRandomComponents("nodes");
+    this.generateRandomComponents("edges");
   }
   toggleNodeStart(id, condition) {
     this.cyWindow.$id(id).style({
@@ -231,7 +208,7 @@ class Graph {
         "target-arrow-color": darkBlueColor,
       });
   }
-  resetGraph() {
+  resetMarkings() {
     this.cyWindow.$("node").style({
       "border-width": 0,
       "background-color": defaultNodeColor,
@@ -241,11 +218,65 @@ class Graph {
       "target-arrow-color": defaultEdgeColor,
     });
   }
+  resetGraph() {
+    this.cyWindow.elements().remove();
+    delete this.adjacentMatrix;
+    delete this.nodes;
+    delete this.edges;
+    this.adjacentMatrix = new Map();
+    this.nodes = [];
+    this.edges = [];
+  }
   getNodeById(id) {
     return this.nodes.find((element) => element.id == id);
   }
   getAdjacent(node) {
     return this.adjacentMatrix.get(node);
+  }
+  createNode() {
+    const currentQuantity = this.cyWindow.$("node").length;
+    const cyObject = {};
+    cyObject["data"] = {
+      id: "n" + String(currentQuantity + 1),
+    };
+    cyObject["position"] = {
+      x: 200,
+      y: 200,
+    };
+    const node = new Node(cyObject["data"]["id"]);
+    this.nodes.push(node);
+    this.adjacentMatrix.set(node, []);
+    this.cyWindow.add(cyObject);
+  }
+  createEdge(source, target, weight) {
+    const sourceNode = this.getNodeById("n" + source);
+    const targetNode = this.getNodeById("n" + target);
+
+    for (let element of this.edges) {
+      if (element.source == sourceNode && element.target == targetNode) {
+        return;
+      }
+    }
+
+    const currentQuantity = this.cyWindow.$("edge").length;
+    const cyObject = {};
+    cyObject["data"] = {
+      id: "e" + String(currentQuantity + 1),
+      source: "n" + source,
+      target: "n" + target,
+      weight: weight,
+    };
+    const edge = new Edge(
+      this.getNodeById(cyObject["data"]["source"]),
+      this.getNodeById(cyObject["data"]["target"]),
+      cyObject["data"]["weight"],
+      cyObject["data"]["id"]
+    );
+    this.edges.push(edge);
+    this.adjacentMatrix
+      .get(this.getNodeById(cyObject["data"]["source"]))
+      .push(edge);
+    this.cyWindow.add(cyObject);
   }
 }
 class SearchAlgorithms {
@@ -309,7 +340,7 @@ class SearchAlgorithms {
       const edge = this.graph.adjacentMatrix
         .get(path[i - 1])
         .find((element) => element.target == path[i]);
-      result += edge.weight;
+      result += Number(edge.weight);
     }
     return result;
   }
@@ -325,14 +356,23 @@ class SearchAlgorithms {
     }
     return path;
   }
+  getPathText() {
+    let node = this.end;
+    const path = [];
+    while (node != this.start && node) {
+      path.unshift(node.id);
+      node = this.parent.get(node);
+    }
+    if (node) {
+      path.unshift(this.start.id);
+    }
+    return path;
+  }
   async depthFirstSearch() {
-    const Solution = await this.depthFirstSearchRecursive(this.start);
-    console.log("Solution " + (Solution ? "found" : "not found"));
-    console.log(this.getPath());
-    console.log("With a cost of: ", this.getPathCost());
+    return await this.depthFirstSearchRecursive(this.start);
   }
   async depthFirstSearchRecursive(node) {
-    console.log(node);
+    // console.log(node);
     this.marked.set(node, true);
     this.graph.markNodeVisited(node.id);
     await new Promise((r) => setTimeout(r, delay[this.speed]));
@@ -356,19 +396,20 @@ class SearchAlgorithms {
   }
 
   async breathFirstSearch() {
-    this.queue.push(this.start, 0);
-    let Solution = false;
+    this.queue.unshift(this.start);
 
     while (this.queue.length > 0) {
       await new Promise((r) => setTimeout(r, delay[this.speed]));
       const node = this.queue.pop();
       this.marked.set(node, true);
-      this.graph.markNodeVisited(node.id);
+      console.log(this.queue);
+      console.log(this.start);
       console.log(node);
+      this.graph.markNodeVisited(node.id);
+      // console.log(node);
 
       if (node == this.end) {
-        Solution = true;
-        break;
+        return true;
       }
 
       for (let adjacent of this.graph.getAdjacent(node)) {
@@ -376,14 +417,11 @@ class SearchAlgorithms {
           const target = adjacent.target;
           await new Promise((r) => setTimeout(r, delay[this.speed] / 2));
           this.graph.markEdgeVisited(node, target);
-          this.queue.push(target, 0);
+          this.queue.unshift(target);
           this.parent.set(target, node);
         }
       }
     }
-    console.log("Solution " + (Solution ? "found" : "not found"));
-    console.log(this.getPath());
-    console.log("With a cost of: ", this.getPathCost());
   }
   aStar() {}
   djkstra() {}
@@ -394,28 +432,40 @@ class SearchAlgorithms {
     delete this.queue;
     this.parent = new Map();
     this.marked = new Map();
-    this._queue = new FlatQueue();
+    this.queue = this.algorthm == "Breath First Search" ? [] : new FlatQueue();
     for (const node of this.graph.nodes) {
       this.marked.set(node, false);
       this.parent.set(node, null);
     }
 
+    let Solution = false;
     switch (this.algorthm) {
       case "Breath First Search":
-        await this.breathFirstSearch();
+        Solution = await this.breathFirstSearch();
         break;
       case "Depth First Search":
-        await this.depthFirstSearch();
+        Solution = await this.depthFirstSearch();
         break;
       case "Djkstra":
-        await this.djkstra();
+        Solution = await this.djkstra();
         break;
       case "A Star":
-        await this.aStar();
+        Solution = await this.aStar();
         break;
     }
-    await new Promise((r) => setTimeout(r, delay[this.speed]));
-    this.graph.resetGraph();
+    $("#solvable, #unsolvable").hide();
+    if (Solution) {
+      $("#path").text(this.getPathText().join(" -> "));
+      $("#pathCost").text("With a cost of: " + this.getPathCost());
+      $("#solvable").show();
+    } else {
+      $("#unsolvable").show();
+    }
+    // console.log("Solution " + (Solution ? "found" : "not found"));
+    // console.log(this.getPath());
+    // console.log("With a cost of: ", this.getPathCost());
+    await new Promise((r) => setTimeout(r, 3000));
+    this.graph.resetMarkings();
     this.start = null;
     this.end = null;
   }
@@ -425,9 +475,7 @@ $(() => {
   const container = "#graphVisualization";
   const generateButton = "#generateGraph";
 
-  const graphObj = new Graph(container, $("#size").val());
-  graphObj.generateRandomGraph();
-
+  const graphObj = new Graph(container);
   const searchAlgorithms = new SearchAlgorithms(graphObj);
 
   $(generateButton).click((e) => {
@@ -458,5 +506,22 @@ $(() => {
     searchAlgorithms.algorthm = $("#algorithm").val();
     searchAlgorithms.speed = $("#speed").val();
     searchAlgorithms.visualize();
+  });
+  $("#resetGraph").click((e) => {
+    graphObj.resetGraph();
+  });
+  $("#createNode").click((e) => {
+    graphObj.createNode();
+  });
+  $("#createEdge").click((e) => {
+    graphObj.createEdge(
+      $("#source").val(),
+      $("#target").val(),
+      $("#weight").val()
+    );
+    $("#source, #target, #weight").val("");
+  });
+  $(".question").click(function (e) {
+    $(`#answer${e.target.id}`).slideToggle();
   });
 });

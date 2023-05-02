@@ -19,7 +19,7 @@
   <body>
     <div class="flex flex-col w-full bg-cyan-500 justify-center px-20 py-8">
       <p class="text-4xl font-semibold text-white">
-        Search Algorithm Visualizer
+        Graph Search Algorithms Visualizer
       </p>
     </div>
     <div
@@ -42,20 +42,6 @@
           <option>Slow</option>
         </select>
       </div>
-      <div class="flex flex-row gap-2 items-center">
-        <label for="size">Node/Edge Quantity: </label>
-        <select id="size" class="outline-none rounded-md text-sm px-2">
-          <option>5</option>
-          <option>10</option>
-          <option>15</option>
-        </select>
-        <input
-          type="button"
-          id="generateGraph"
-          value="Generate Graph"
-          class="bg-white rounded-lg px-4 py-1 hover:bg-cyan-400 hover:text-white hover:cursor-pointer transition hover:shadow-lg"
-        />
-      </div>
       <input
         type="button"
         id="visualize"
@@ -63,51 +49,199 @@
         class="rounded-lg px-4 py-1 bg-[#2AFF22] text-white hover:bg-[#22DA1C] hover:shadow-lg hover:cursor-pointer transition"
       />
     </div>
-    <div
-      class="flex flex-col h-full w-full p-10 md:justify-center md:flex-row gap-4"
-    >
-      <div
-        id="graphVisualization"
-        class="outline h-1/2 md:w-1/2 max-w-full rounded-xl"
-      ></div>
-      <div class="md:w-1/4 flex flex-col gap-2">
-        <div class="flex flex-col gap-2 items-center">
-          <p class="w-full text-bold text-2xl border-b-2 border-">
-            Create Node
-          </p>
-          <div class="relative flex flex-row gap-4">
-            <input
-              type="text"
-              placeholder="ID"
-              class="px-4 py-1 outline-none border border-black rounded-xl w-20"
-            />
-            <input
-              type="button"
-              value="Create"
-              class="px-4 py-1 bg-stone-400 rounded-xl text-white shadow-lg hover:cursor-pointer hover:bg-stone-500 hover:shadow-2xl"
-            />
+    <div class="p-10 flex flex-col gap-5">
+      <div class="flex flex-col w-full md:justify-center md:flex-row gap-4">
+        <div
+          id="graphVisualization"
+          class="outline h-96 md:w-1/2 max-w-full rounded-xl"
+        ></div>
+        <div class="flex flex-col gap-4">
+          <input
+            type="button"
+            id="resetGraph"
+            value="Reset Graph"
+            class="bg-cyan-400 text-white rounded-lg px-4 py-1 hover:bg-cyan-600 hover:cursor-pointer transition hover:shadow-lg"
+          />
+          <input
+            type="button"
+            id="createNode"
+            value="Create Node"
+            class="bg-cyan-400 text-white rounded-lg px-4 py-1 hover:bg-cyan-600 hover:cursor-pointer transition hover:shadow-lg"
+          />
+          <div class="flex flex-col gap-2 items-center">
+            <p class="w-full text-bold text-2xl border-b-2">Create Edge</p>
+            <div class="relative flex flex-row flex-wrap gap-4">
+              <input
+                type="text"
+                id="source"
+                placeholder="Source ID"
+                class="px-4 py-1 outline-none border border-black rounded-xl w-28"
+              />
+              <input
+                type="text"
+                id="target"
+                placeholder="Target ID"
+                class="px-4 py-1 outline-none border border-black rounded-xl w-28"
+              />
+              <input
+                type="text"
+                id="weight"
+                placeholder="Weight"
+                class="px-4 py-1 outline-none border border-black rounded-xl w-28"
+              />
+              <input
+                type="button"
+                id="createEdge"
+                value="Create"
+                class="bg-stone-400 text-white rounded-lg px-4 py-1 hover:bg-cyan-400 hover:cursor-pointer transition hover:shadow-lg"
+              />
+            </div>
+          </div>
+          <div class="flex flex-col gap-2 items-center">
+            <p class="w-full text-bold text-2xl border-b-2">
+              Generate random Graph
+            </p>
+            <div class="flex flex-row gap-2 items-center">
+              <label for="size">Node/Edge Quantity: </label>
+              <select
+                id="size"
+                class="outline-none border border-black rounded-md text-sm px-2 py-1"
+              >
+                <option>5</option>
+                <option>10</option>
+                <option>15</option>
+              </select>
+              <input
+                type="button"
+                id="generateGraph"
+                value="Generate"
+                class="bg-stone-400 text-white rounded-lg px-4 py-1 hover:bg-cyan-400 hover:cursor-pointer transition hover:shadow-lg"
+              />
+            </div>
+          </div>
+          <div class="text-center">
+            <p class="w-full text-bold text-2xl border-b-2">Result</p>
+            <div id="solvable" class="flex flex-col items-center hidden">
+              <p class="text-xl font-semibold text-[#2AFF22]">
+                Solution found:
+                <span id="path" class="font-semibold text-black"></span>
+              </p>
+              <p id="pathCost" class="font-semibold text-black"></p>
+            </div>
+            <p
+              id="unsolvable"
+              class="text-xl font-semibold text-red-500 hidden"
+            >
+              Impossible to solve!
+            </p>
           </div>
         </div>
-        <div class="flex flex-col gap-2 items-center">
-          <p class="w-full text-bold text-2xl border-b-2 border-">
-            Create Edge
+      </div>
+      <div class="flex flex-col gap-1 mx-auto w-3/4">
+        <div>
+          <div
+            id="1"
+            class="group hover:border-cyan-600 transition-all flex justify-between border-cyan-400 border-b-2 text-3xl hover:cursor-pointer items-center question"
+          >
+            <p class="pointer-events-none">What are graph search algorithms?</p>
+            <p class="pointer-events-none group-hover:rotate-90 transition-all">
+              +
+            </p>
+          </div>
+          <p class="hidden text-lg" id="answer1">
+            Graph search (or graph traversal) algorithms explore a graph for
+            general discovery or explicit search. They will try to visit as much
+            of the graph as they can reach, but there is no expectation that the
+            paths they explore are computationally optimal. Graph search
+            algorithms are usually used as a core component of other algorithms.
           </p>
-          <div class="relative flex flex-row flex-wrap gap-4">
-            <input
-              type="text"
-              placeholder="Source ID"
-              class="px-4 py-1 outline-none border border-black rounded-xl w-28"
-            />
-            <input
-              type="text"
-              placeholder="Target ID"
-              class="px-4 py-1 outline-none border border-black rounded-xl w-28"
-            />
-            <input
-              type="button"
-              value="Create"
-              class="px-4 py-1 bg-stone-400 rounded-xl text-white shadow-lg hover:cursor-pointer hover:bg-stone-500 hover:shadow-2xl"
-            />
+        </div>
+        <div>
+          <div
+            class="group hover:border-cyan-600 transition-all flex justify-between border-cyan-400 border-b-2 text-3xl hover:cursor-pointer items-center question"
+            id="2"
+          >
+            <p class="pointer-events-none" id="2">Depth First Search</p>
+            <p class="pointer-events-none group-hover:rotate-90 transition-all">
+              +
+            </p>
+          </div>
+          <p class="hidden text-lg" id="answer2">
+            <span class="font-semibold">Depth First Search (DFS)</span> is a
+            graph traversal algorithm that starts from a chosen node, picks one
+            of its neighbors, and then traverses as far as it can along that
+            path before backtracking. Like BFS, DFS can be used on its own, but
+            is more commonly used as a component of other algorithms. For
+            example, Connected Components and Strongly Connected Components use
+            the DFS algorithm. It was originally invented as a strategy for
+            solving mazes and can also be used to generate those mazes.
+          </p>
+        </div>
+        <div>
+          <div
+            id="3"
+            class="group hover:border-cyan-600 transition-all flex justify-between border-cyan-400 border-b-2 text-3xl hover:cursor-pointer items-center question"
+          >
+            <p class="pointer-events-none">Breadth First Search</p>
+            <p class="pointer-events-none group-hover:rotate-90 transition-all">
+              +
+            </p>
+          </div>
+          <p class="hidden text-lg" id="answer3">
+            <span class="font-semibold">Breadth First Search (BFS)</span> is a
+            graph traversal algorithm that starts from a chosen node and
+            explores all of its neighbors at one hop away before visiting all
+            the neighbors at two hops away, and so on. While it can be used on
+            its own, it is most commonly used as the basis for other more
+            goal-oriented algorithms. For example, Shortest Path, Connected
+            Components, and Closeness Centrality all use the BFS algorithm. It
+            can also be used to find the shortest path between nodes or for
+            computing the maximum flow in a flow network.
+          </p>
+        </div>
+        <div>
+          <div
+            id="4"
+            class="group hover:border-cyan-600 transition-all flex justify-between border-cyan-400 border-b-2 text-3xl hover:cursor-pointer items-center question"
+          >
+            <p class="pointer-events-none">Djkstra</p>
+            <p class="pointer-events-none group-hover:rotate-90 transition-all">
+              +
+            </p>
+          </div>
+          <p class="hidden text-lg" id="answer4">
+            <span class="font-semibold">Dijkstra's algorithm</span> is a greedy
+            algorithm designed by Edsger W. Dijkstra. It computes the shortest
+            path of all the nodes/vertices of a graph from a particular
+            node/vertex selected by the user. This algorithm can work on both
+            directed and undirected graphs.
+          </p>
+        </div>
+        <div>
+          <div
+            id="5"
+            class="group hover:border-cyan-600 transition-all flex justify-between border-cyan-400 border-b-2 text-3xl hover:cursor-pointer items-center question"
+          >
+            <p class="pointer-events-none">A* Algorithm</p>
+            <p class="pointer-events-none group-hover:rotate-90 transition-all">
+              +
+            </p>
+          </div>
+          <div class="hidden text-lg" id="answer5">
+            <p>
+              A* search algorithm is an algorithm that separates it from other
+              traversal techniques. This makes A* smart and pushes it much ahead
+              of conventional algorithms.
+            </p>
+            <br />
+            <p>
+              The <span class="font-semibold">A* search algorithm</span>, builds
+              on the principles of Dijkstra’s shortest path algorithm to provide
+              a faster solution when faced with the problem of finding the
+              shortest path between two nodes. It achieves this by introducing a
+              heuristic element to help decide the next node to consider as it
+              moves along the path.
+            </p>
           </div>
         </div>
       </div>
