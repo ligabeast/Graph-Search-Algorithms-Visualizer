@@ -549,7 +549,7 @@ class SearchAlgorithms {
     if (!(this.start && this.end && this.graph.nodes.length > 1)) {
       return;
     }
-    this.heuristic = $("#heuristicFunction").val();
+    this.heuristic = $("#selectedHeuristic").val();
     this.running = true;
     delete this.parent;
     delete this.marked;
