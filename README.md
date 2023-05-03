@@ -24,5 +24,5 @@ Whether you're a student studying computer science, a researcher exploring the l
 * Select start and end nodes: Users can select the start and end nodes for the graph algorithm by clicking on the corresponding nodes.
 
 # Technologies Used
-* Javascript Libraries : jQuery, Cytoscape, Flatqueue
+* Javascript Libraries : jQuery, @cytoscape, Flatqueue
 * Css framework : Tailwind
