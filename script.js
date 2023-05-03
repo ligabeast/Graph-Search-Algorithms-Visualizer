@@ -173,8 +173,8 @@ class Graph {
     this.resetGraph();
     this.generateRandomComponents("nodes");
     this.generateRandomComponents("edges");
-    this.counterEdge = this.size;
-    this.counterNode = this.size;
+    this.counterEdge = Number(this.size);
+    this.counterNode = Number(this.size);
   }
   toggleNodeStart(id, condition) {
     this.cyWindow.$id(id).style({
