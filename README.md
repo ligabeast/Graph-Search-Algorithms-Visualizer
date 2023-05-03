@@ -1,2 +1,2 @@
-# Graph search algorithms visualization
-Visit under: https://6451a1f33a695a0d9f314b60--heartfelt-lokum-dfacc0.netlify.app/
+# Graph search algorithms Visualizer
+Visit under: https://unrivaled-dragon-21530a.netlify.app/
