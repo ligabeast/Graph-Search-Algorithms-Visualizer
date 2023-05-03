@@ -35,6 +35,16 @@
         </select>
       </div>
       <div class="flex flex-row gap-2">
+        <label for="heuristicFunction">Select Heuristic: </label>
+        <select
+          id="heuristicFunction"
+          class="outline-none rounded-md text-sm px-2 hidden"
+        >
+          <option>Euclidean Distance</option>
+          <option>Manhatten Distance</option>
+        </select>
+      </div>
+      <div class="flex flex-row gap-2">
         <label for="speed">Speed: </label>
         <select id="speed" class="outline-none rounded-md text-sm px-2">
           <option>Fast</option>
@@ -110,7 +120,7 @@
                 type="button"
                 id="deleteNode"
                 value="Delete"
-                class="bg-red-500 text-white rounded-lg px-4 py-1 hover:bg-cyan-400 hover:cursor-pointer transition hover:shadow-lg"
+                class="bg-red-500 text-white rounded-lg px-4 py-1 hover:bg-red-600 hover:cursor-pointer transition hover:shadow-lg"
               />
             </div>
           </div>
@@ -133,7 +143,7 @@
                 type="button"
                 id="deleteEdge"
                 value="Delete"
-                class="bg-red-500 text-white rounded-lg px-4 py-1 hover:bg-cyan-400 hover:cursor-pointer transition hover:shadow-lg"
+                class="bg-red-500 text-white rounded-lg px-4 py-1 hover:bg-red-600 hover:cursor-pointer transition hover:shadow-lg"
               />
             </div>
           </div>

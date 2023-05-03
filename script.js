@@ -88,6 +88,8 @@ class Graph {
         },
       ],
     });
+    this.counterNode = 0;
+    this.counterEdge = 0;
     this.nodes = [];
     this.edges = [];
     this.adjacentMatrix = new Map();
@@ -171,6 +173,8 @@ class Graph {
     this.resetGraph();
     this.generateRandomComponents("nodes");
     this.generateRandomComponents("edges");
+    this.counterEdge = this.size;
+    this.counterNode = this.size;
   }
   toggleNodeStart(id, condition) {
     this.cyWindow.$id(id).style({
@@ -213,6 +217,8 @@ class Graph {
     });
   }
   resetGraph() {
+    this.counterEdge = 0;
+    this.counterNode = 0;
     this.cyWindow.elements().remove();
     delete this.adjacentMatrix;
     delete this.nodes;
@@ -228,10 +234,9 @@ class Graph {
     return this.adjacentMatrix.get(node);
   }
   createNode() {
-    const currentQuantity = this.cyWindow.$("node").length;
     const cyObject = {};
     cyObject["data"] = {
-      id: "n" + String(currentQuantity + 1),
+      id: "n" + String(this.counterNode + 1),
     };
     cyObject["position"] = {
       x: 200,
@@ -241,6 +246,7 @@ class Graph {
     this.nodes.push(node);
     this.adjacentMatrix.set(node, []);
     this.cyWindow.add(cyObject);
+    this.counterNode++;
   }
   deleteEdge(source, target) {
     const sourceNode = this.getNodeById("n" + source);
@@ -278,11 +284,9 @@ class Graph {
         return;
       }
     }
-
-    const currentQuantity = this.cyWindow.$("edge").length;
     const cyObject = {};
     cyObject["data"] = {
-      id: "e" + String(currentQuantity + 1),
+      id: "e" + String(this.counterEdge + 1),
       source: "n" + source,
       target: "n" + target,
       weight: Number(weight),
@@ -298,6 +302,10 @@ class Graph {
       .get(this.getNodeById(cyObject["data"]["source"]))
       .push(edge);
     this.cyWindow.add(cyObject);
+    this.counterEdge++;
+  }
+  getPostion(node) {
+    return this.cyWindow.$id(node.id).position();
   }
 }
 class SearchAlgorithms {
@@ -397,6 +405,31 @@ class SearchAlgorithms {
     }
     return path;
   }
+  euclideanDistance(node) {
+    const sourcePosition = this.graph.getPostion(node);
+    const targetPosition = this.graph.getPostion(this.end);
+
+    return Math.sqrt(
+      (sourcePosition.x - targetPosition.x) ** 2 +
+        (sourcePosition.y - targetPosition.y) ** 2
+    );
+  }
+  manhattenDistance(node) {
+    const sourcePosition = this.graph.getPostion(node);
+    const targetPosition = this.graph.getPostion(this.end);
+
+    return (
+      Math.abs(sourcePosition.x - targetPosition.x) +
+      Math.abs(sourcePosition.y - targetPosition.y)
+    );
+  }
+  heuristicFunction(adjacent) {
+    if (this.heuristic == "Euclidean Distance") {
+      return this.euclideanDistance(adjacent) / 1000;
+    } else if (this.heuristic == "Manhattan Distance") {
+      return this.manhattenDistance(adjacent) / 1000;
+    }
+  }
   async depthFirstSearch() {
     return await this.depthFirstSearchRecursive(this.start);
   }
@@ -447,7 +480,6 @@ class SearchAlgorithms {
       }
     }
   }
-  aStar() {}
   async djkstra() {
     const StartEdge = new Edge(null, this.start, 0, 0);
     this.queue.push(StartEdge, StartEdge.weight);
@@ -469,21 +501,56 @@ class SearchAlgorithms {
           !this.marked.has(adjacent.target) &&
           this.reachedCosts.get(adjacent.target) > adjacent.weight + costs
         ) {
+          await new Promise((r) => setTimeout(r, delay[this.speed] / 2));
           this.reachedCosts.set(adjacent.target, adjacent.weight + costs);
           this.graph.markEdgeVisited(adjacent);
-          await new Promise((r) => setTimeout(r, delay[this.speed] / 2));
           this.queue.push(adjacent, adjacent.weight + costs);
-          console.log(adjacent, adjacent.weight + costs);
         }
       }
     }
     return false;
+  }
+  async aStar() {
+    const StartEdge = new Edge(null, this.start, 0, 0);
+    this.queue.push(StartEdge, StartEdge.weight);
+
+    while (this.queue.length > 0) {
+      await new Promise((r) => setTimeout(r, delay[this.speed]));
+      const costs = this.queue.peekValue();
+      const edge = this.queue.pop();
+      this.graph.markNodeVisited(edge.target.id);
+      this.parent.set(edge.target, edge.source);
+      this.marked.add(edge.target);
+
+      if (edge.target == this.end) {
+        return true;
+      }
+      for (let adjacent of this.graph.getAdjacent(edge.target)) {
+        if (
+          !this.marked.has(adjacent.target) &&
+          this.reachedCosts.get(adjacent.target) >
+            adjacent.weight +
+              costs +
+              this.heuristicFunction(adjacent.target) / 100
+        ) {
+          await new Promise((r) => setTimeout(r, delay[this.speed] / 2));
+          this.reachedCosts.set(
+            adjacent.target,
+            adjacent.weight + costs + this.heuristicFunction(adjacent.target)
+          );
+          this.graph.markEdgeVisited(adjacent);
+          console.log(this.reachedCosts.get(adjacent.target));
+          this.queue.push(adjacent, this.reachedCosts.get(adjacent.target));
+        }
+      }
+    }
   }
 
   async visualize() {
     if (!(this.start && this.end && this.graph.nodes.length > 1)) {
       return;
     }
+    this.heuristic = $("#heuristicFunction").val();
     this.running = true;
     delete this.parent;
     delete this.marked;
@@ -584,12 +651,12 @@ $(() => {
         $("#createTarget").val(),
         $("#weight").val()
       );
-      $("#source, #target, #weight").val("");
+      $("#createSource, #createTarget, #weight").val("");
     }
   });
   $("#deleteEdge").click((e) => {
     if ($("#deleteSource").val() && $("#deleteTarget").val()) {
-      graphObj.deleteEdge($("#createSource").val(), $("#createTarget").val());
+      graphObj.deleteEdge($("#deleteSource").val(), $("#deleteTarget").val());
       $("#deleteSource, #deleteTarget").val("");
     }
   });
@@ -601,5 +668,12 @@ $(() => {
   });
   $(".question").click(function (e) {
     $(`#answer${e.target.id}`).slideToggle();
+  });
+  $("#algorithm").change((e) => {
+    if ($("#algorithm").val() == "A Star") {
+      $("#heuristicFunction").show();
+    } else {
+      $("#heuristicFunction").hide();
+    }
   });
 });
