@@ -426,7 +426,7 @@ class SearchAlgorithms {
   heuristicFunction(adjacent) {
     if (this.heuristic == "Euclidean Distance") {
       return this.euclideanDistance(adjacent) / 1000;
-    } else if (this.heuristic == "Manhattan Distance") {
+    } else if (this.heuristic == "Manhatten Distance") {
       return this.manhattenDistance(adjacent) / 1000;
     }
   }
@@ -539,7 +539,6 @@ class SearchAlgorithms {
             adjacent.weight + costs + this.heuristicFunction(adjacent.target)
           );
           this.graph.markEdgeVisited(adjacent);
-          console.log(this.reachedCosts.get(adjacent.target));
           this.queue.push(adjacent, this.reachedCosts.get(adjacent.target));
         }
       }
