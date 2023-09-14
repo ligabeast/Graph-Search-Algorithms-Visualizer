@@ -1,5 +1,6 @@
-# Graph search algorithms Visualizer
-Visit under: https://unrivaled-dragon-21530a.netlify.app/
+## Graph search algorithms Visualizer
+## Visit 
+https://unrivaled-dragon-21530a.netlify.app/
 
 ![ezgif-1-02986160df](https://user-images.githubusercontent.com/114762651/236030837-d0492837-3bd8-46e5-893c-ee1ac5045c59.gif)
 
